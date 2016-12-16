@@ -8701,19 +8701,22 @@ Relative paths are relative to the file being checked."
 This syntax checker needs Rust 1.7 or newer, and Cargo with the
 rustc command.  See URL `https://www.rust-lang.org'."
   :command ("cargo" "rustc"
-            (eval (cond
-                   ((string= flycheck-rust-crate-type "lib") "--lib")
-                   (flycheck-rust-binary-name
-                    (list "--bin" flycheck-rust-binary-name))))
+            (eval (concat "--" flycheck-rust-crate-type))
+            ;; All crate targets except "lib" need a binary name
+            (eval (unless (string= flycheck-rust-crate-type "lib")
+                    flycheck-rust-binary-name))
             (eval flycheck-cargo-rustc-args)
-            "--" "-Z" "no-trans"
+            "--" "-Zno-trans"
             ;; Passing the "unstable-options" flag may raise an error in the
             ;; future.  For the moment, we need it to access JSON output in all
             ;; rust versions >= 1.7.
             "-Z" "unstable-options"
             "--error-format=json"
-            (option-flag "--test" flycheck-rust-check-tests)
-            (option-list "-L" flycheck-rust-library-path concat)
+            ;; Passing the "--test" flag when the target is a test binary
+            ;; triggers an error.
+            (eval (when flycheck-rust-check-tests
+                    (unless (string= flycheck-rust-crate-type "test")
+                      "--test")))
             (eval flycheck-rust-args))
   :error-parser flycheck-parse-rust
   :error-explainer flycheck-rust-error-explainer
@@ -8744,8 +8747,7 @@ This syntax checker needs Rust 1.7 or newer.  See URL
                       (flycheck-substitute-argument 'source-original 'rust))))
   :error-parser flycheck-parse-rust
   :error-explainer flycheck-rust-error-explainer
-  :modes rust-mode
-  :predicate flycheck-buffer-saved-p)
+  :modes rust-mode)
 
 (defvar flycheck-sass-scss-cache-directory nil
   "The cache directory for `sass' and `scss'.")
