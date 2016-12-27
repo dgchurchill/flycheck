@@ -8747,7 +8747,8 @@ This syntax checker needs Rust 1.7 or newer.  See URL
                       (flycheck-substitute-argument 'source-original 'rust))))
   :error-parser flycheck-parse-rust
   :error-explainer flycheck-rust-error-explainer
-  :modes rust-mode)
+  :modes rust-mode
+  :predicate flycheck-buffer-saved-p)
 
 (defvar flycheck-sass-scss-cache-directory nil
   "The cache directory for `sass' and `scss'.")
